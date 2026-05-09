@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>MyBank Ultra</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+/* GLOBAL */
+* { box-sizing:border-box; }
+
+body {
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+    color:var(--text);
+    transition:background 0.5s ease,color 0.5s ease;
+    position:relative;
+    overflow-x:hidden;
+}
+
+/* subtle noise overlay */
+body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    mix-blend-mode:soft-light;
+    z-index:-1;
+}
+
+/* NAVBAR */
+.navbar {
+    position:fixed;
+    inset-inline:0;
+    top:0;
+    z-index:1000;
+    padding-block:10px;
+    background:
+        linear-gradient(to bottom,rgba(249,250,251,0.98),rgba(249,250,251,0.96),rgba(249,250,251,0.9),transparent);
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid rgba(209,213,219,0.9);
+}
+
+.navbar-brand-text {
+    letter-spacing:0.22em;
+    font-size:13px;
+    text-transform:uppercase;
+    color:#4b5563;
+}
+
+.nav-logo {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:600;
+    font-size:18px;
+}
+
+.logo-img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
+}
+
+.logo-text {
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:0.06em;
+    color:#020617;
+}
+
+/* NAV BUTTONS */
+.btn-apple {
+    background:
+        radial-gradient(circle at 0% 0%, #ffffff 0, #e5e7eb 45%, #d4d4d8 100%);
+    color:#020617;
+    border-radius:999px;
+    padding:7px 20px;
+    border:1px solid rgba(148,163,184,0.7);
+    font-size:14px;
+    font-weight:500;
+    box-shadow:0 14px 40px rgba(148,163,184,0.6);
+    transition:transform 0.18s ease,box-shadow 0.18s ease,background 0.18s ease;
+}
+.btn-apple:hover {
+    transform:translateY(-1px) scale(1.03);
+    box-shadow:0 18px 45px rgba(148,163,184,0.75);
+    background:
+        radial-gradient(circle at 10% 0%, #ffffff 0, #f3f4f6 40%, #e5e7eb 100%);
+}
+
+.btn-outline-apple {
+    border-radius:999px;
+    padding:7px 20px;
+    border:1px solid rgba(148,163,184,0.9);
+    background:rgba(255,255,255,0.95);
+    color:#111827;
+    font-size:14px;
+    font-weight:500;
+    text-decoration: none;
+    backdrop-filter:blur(12px);
+    transition:background 0.18s ease,box-shadow 0.18s ease,transform 0.18s ease,border-color 0.18s ease;
+}
+.btn-outline-apple:hover {
+    background:#111827;
+    color:#f9fafb;
+    border-color:#111827;
+    transform:translateY(-1px);
+    box-shadow:0 14px 40px rgba(15,23,42,0.4);
+}
+
+/* HEADER WALA FEEDBACK BUTTON */
+.btn-feedback {
+    border-radius:999px;
+    padding:7px 18px;
+    border:1px solid rgba(148,163,184,0.8);
+    background:rgba(15,23,42,0.95);
+    color:#f9fafb;
+    font-size:13px;
+    font-weight:500;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    box-shadow:0 12px 32px rgba(15,23,42,0.45);
+    transition:background 0.18s ease,transform 0.18s ease,box-shadow 0.18s ease;
+}
+.btn-feedback span.icon {
+    font-size:15px;
+}
+.btn-feedback:hover {
+    background:#020617;
+    transform:translateY(-1px);
+    box-shadow:0 18px 40px rgba(15,23,42,0.6);
+}
+
+/* HERO LAYOUT */
+.hero {
+    height: calc(100vh - 70px);
+    width:100%;
+    position:relative;
+    overflow:hidden;
+    background:linear-gradient(135deg,#e5f2ff,#e0f2f1);
+}
+
+/* Background floating orbs */
+.hero::before,
+.hero::after {
+    content:'';
+    position:absolute;
+    border-radius:999px;
+    filter:blur(50px);
+    opacity:0.5;
+    pointer-events:none;
+}
+.hero::before {
+    width:360px;
+    height:360px;
+    background:radial-gradient(circle,rgba(56,189,248,0.35) 0,transparent 60%);
+    top:5%;
+    left:-10%;
+}
+.hero::after {
+    width:320px;
+    height:320px;
+    background:radial-gradient(circle,rgba(94,234,212,0.35) 0,transparent 60%);
+    bottom:-10%;
+    right:-6%;
+}
+
+/* SLIDES */
+.slide {
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    opacity:0;
+    transform:scale(1.02);
+    filter:saturate(1.05) contrast(1.1) brightness(0.7);
+    transition:opacity 1.2s ease,transform 12s linear;
+}
+.slide.active {
+    opacity:1;
+    transform:scale(1.06);
+}
+
+/* LIGHT OVERLAY */
+.overlay {
+    position:absolute;
+    inset:0;
+    mix-blend-mode:normal;
+}
+
+/* HERO CONTENT */
+.hero-inner {
+    position:relative;
+    z-index:2;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    padding-inline:8%;
+    padding-bottom:60px;
+}
+
+.hero-content {
+    max-width:520px;
+}
+
+.eyebrow {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:4px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.95);
+    border:1px solid rgba(148,163,184,0.9);
+    color:#6b7280;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.16em;
+    backdrop-filter:blur(12px);
+    margin-bottom:18px;
+}
+
+.hero-content h1 {
+    font-size:52px;
+    line-height:1.05;
+    letter-spacing:-0.04em;
+    font-weight:750;
+    margin-bottom:12px;
+    color:#020617;
+    text-shadow:none;
+}
+.hero-subtitle {
+    font-size:16px;
+    color:#4b5563;
+    max-width:420px;
+    margin-bottom:26px;
+}
+
+.hero-cta {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.hero-note {
+    font-size:12px;
+    color:#6b7280;
+    margin-left:4px;
+}
+
+/* FEATURES SECTION (footer ke upar) */
+.features-section {
+    position:relative;
+    z-index:3;
+    padding:40px 0 30px;
+}
+
+.features-section::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle at top,rgba(148,163,184,0.15) 0,transparent 55%);
+    pointer-events:none;
+}
+
+.feature-card {
+    padding:20px 18px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.94);
+    border:1px solid rgba(209,213,219,0.9);
+    box-shadow:0 14px 40px rgba(148,163,184,0.35);
+    backdrop-filter:blur(16px);
+    transition:transform 0.2s ease,box-shadow 0.2s ease,border-color 0.2s ease;
+    min-height:140px;
+}
+.feature-card:hover {
+    transform:translateY(-6px);
+    box-shadow:0 24px 60px rgba(148,163,184,0.6);
+    border-color:rgba(56,189,248,0.8);
+}
+
+.feature-icon {
+    font-size:22px;
+    margin-bottom:8px;
+}
+.feature-title {
+    font-weight:600;
+    margin-bottom:6px;
+    color:#020617;
+}
+.feature-text {
+    font-size:13px;
+    color:#6b7280;
+}
+
+/* FOOTER MINI */
+.feedback-section {
+    background:radial-gradient(circle at top,rgba(209,213,219,0.45) 0,#e5e7eb 60%);
+    padding:16px 16px 20px;
+    border-top:1px solid rgba(209,213,219,0.9);
+}
+.footer-mini {
+    text-align:center;
+    font-size:11px;
+    color:#9ca3af;
+    margin:0;
+}
+
+/* HEADER FEEDBACK DROPDOWN PANEL */
+.feedback-flyout {
+    position:fixed;
+    right:16px;
+    top:60px;
+    max-width:260px;
+    width:100%;
+    background:#020617;
+    color:#e5e7eb;
+    border-radius:18px;
+    padding:12px 14px;
+    box-shadow:0 20px 60px rgba(15,23,42,0.75);
+    border:1px solid rgba(15,23,42,0.9);
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(-8px);
+    transition:opacity 0.22s ease,transform 0.22s ease;
+    z-index:1200;
+    font-size:12px;
+}
+.feedback-flyout.open {
+    opacity:1;
+    pointer-events:auto;
+    transform:translateY(0);
+}
+.feedback-flyout-title {
+    font-size:12px;
+    font-weight:600;
+    margin-bottom:4px;
+}
+.feedback-flyout-text {
+    font-size:11px;
+    color:#9ca3af;
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+    .hero-inner {
+        flex-direction:column;
+        align-items:flex-start;
+        justify-content:center;
+        gap:32px;
+        padding-inline:6%;
+        padding-top:30px;
+    }
+    .hero {
+        padding-top:90px;
+    }
+    .hero-content h1 {
+        font-size:40px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="container d-flex justify-content-between align-items-center">
+    <div class="d-flex flex-column">
+      <div class="nav-logo">
+        <img th:src="@{/images/logo1.png}" class="logo-img" alt="logo">
+        <span class="logo-text">MyBank</span>
+      </div>
+      <span class="navbar-brand-text">Digital Banking • Private</span>
+    </div>
+
+    <div class="d-flex gap-2 align-items-center">
+      <a th:href="@{/login}" class="btn-apple">Login</a>
+      <a th:href="@{/signup}" class="btn-outline-apple">Open Account</a>
+      <!-- HEADER FEEDBACK BUTTON -->
+      <button type="button" class="btn-feedback" id="feedbackToggle">
+        <span class="icon">💬</span>
+        <span>Feedback</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- FEEDBACK SMALL PANEL -->
+<div class="feedback-flyout" id="feedbackFlyout">
+  <div class="feedback-flyout-title">Share your thoughts</div>
+  <div class="feedback-flyout-text">
+    Tell us what you love or want improved. This will open the feedback page of MyBank.
+  </div>
+  <div style="margin-top:8px; text-align:right;">
+    <a th:href="@{/feedback}" class="btn-apple" style="padding:5px 14px; font-size:12px; box-shadow:none;">
+      Open feedback
+    </a>
+  </div>
+</div>
+
+<!-- HERO -->
+<!-- HERO -->
+<div class="hero">
+
+  <!-- LOCAL IMAGES SLIDER -->
+  <div class="slide active" style="background-image:url('/images/img1.jpg');"></div>
+
+  <div class="slide" style="background-image:url('/images/img2.jpg');"></div>
+
+  <!-- OPTIONAL THIRD (same image repeat ya new add karo) -->
+  <div class="slide" style="background-image:url('/images/img1.jpg');"></div>
+
+  <!-- DARK OVERLAY (LOGIN STYLE) -->
+  <div class="overlay" style="background:rgba(0,0,0,0.4);"></div>
+
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="eyebrow">
+        <span style="font-size:9px;">●</span>
+        <span>Instant account · Global ready</span>
+      </div>
+
+      <h1 style="color:white;">Banking, re-designed<br>for everyday moments.</h1>
+
+      <p class="hero-subtitle" style="color:#e5e7eb;">
+        One ultra-clean dashboard for your money, cards, and savings.
+      </p>
+
+      <div class="hero-cta">
+        <a th:href="@{/login}" class="btn-apple">Get Started</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- FEATURES (3 cards, footer ke just upar) -->
+<div class="features-section">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">🔐</div>
+          <div class="feature-title">Secure by default</div>
+          <div class="feature-text">
+            Spring Security sessions, strong encryption, and instant alerts keep every login and transaction under your control.
+          </div>
+		  
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">Real‑time money</div>
+          <div class="feature-text">
+            See balances update instantly after every card swipe, transfer, or UPI payment — no manual refresh needed.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Smart insights</div>
+          <div class="feature-text">
+            Clean monthly overviews for spends, income, and upcoming bills so you always know what’s coming next.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="feedback-section">
+  <div class="footer-mini">
+    © MyBank · Crafted for modern web banking experiences.
+  </div>
+</div>
+
+<script>
+/* SLIDER */
+let slides = document.querySelectorAll(".slide");
+let i = 0;
+setInterval(() => {
+  slides[i].classList.remove("active");
+  i = (i + 1) % slides.length;
+  slides[i].classList.add("active");
+}, 5000);
+
+/* HEADER FEEDBACK BUTTON TOGGLE */
+const feedbackToggle = document.getElementById("feedbackToggle");
+const feedbackFlyout = document.getElementById("feedbackFlyout");
+
+if (feedbackToggle && feedbackFlyout) {
+  feedbackToggle.addEventListener("click", () => {
+    feedbackFlyout.classList.toggle("open");
+  });
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>MyBank Card</title>
+
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+    background:
+        radial-gradient(circle at top, #0b1120, #020617 55%, #020617 100%);
+}
+
+/* CONTAINER */
+.card-container {
+    perspective: 1400px;
+}
+
+/* CARD */
+.card {
+    width: 360px;
+    height: 220px;
+    border-radius: 24px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.7s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    box-shadow:
+        0 28px 80px rgba(15,23,42,0.9),
+        0 0 0 1px rgba(148,163,184,0.3);
+}
+
+/* 3D TILT */
+.card-container:hover .card:not(.flip) {
+    transform: rotateY(10deg) rotateX(6deg) scale(1.02);
+    box-shadow:
+        0 38px 110px rgba(15,23,42,1),
+        0 0 0 1px rgba(148,163,184,0.4);
+}
+
+/* FLIP */
+.card.flip {
+    transform: rotateY(180deg);
+}
+
+/* COMMON */
+.card-front,
+.card-back {
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    backface-visibility: hidden;
+    color: #f9fafb;
+    padding: 20px 22px;
+    overflow: hidden;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+
+    background: radial-gradient(
+        circle at top left,
+        rgba(148,163,184,0.45) 0,
+        rgba(15,23,42,0.98) 45%,
+        rgba(15,23,42,1) 100%
+    );
+    backdrop-filter: blur(22px);
+    border: 1px solid rgba(148,163,184,0.45);
+}
+
+/* FRONT – APPLE STYLE METAL GLASS */
+.card-front {
+    background:
+        radial-gradient(circle at -10% -10%, rgba(248,250,252,0.45) 0, transparent 45%),
+        radial-gradient(circle at 110% 10%, rgba(56,189,248,0.4) 0, transparent 50%),
+        linear-gradient(135deg,#020617,#020617,#020617,#020617);
+}
+
+/* soft inner highlight */
+.card-front::before {
+    content:"";
+    position:absolute;
+    inset:-40%;
+    background:conic-gradient(
+        from 210deg,
+        transparent 0,
+        rgba(255,255,255,0.22) 20%,
+        transparent 40%,
+        rgba(148,163,184,0.16) 60%,
+        transparent 100%
+    );
+    mix-blend-mode:screen;
+    opacity:0.55;
+    pointer-events:none;
+}
+
+/* subtle moving sheen band */
+.card-front::after {
+    content:"";
+    position:absolute;
+    top:-40%;
+    left:-60%;
+    width:200%;
+    height:200%;
+    background:linear-gradient(
+        120deg,
+        transparent,
+        rgba(255,255,255,0.18),
+        transparent
+    );
+    transform:translateX(-40%) rotate(18deg);
+    animation: sheen 8s infinite;
+    opacity:0.7;
+    pointer-events:none;
+}
+
+@keyframes sheen {
+    0% { transform: translateX(-60%) rotate(18deg); }
+    100% { transform: translateX(60%) rotate(18deg); }
+}
+
+/* BACK */
+.card-back {
+    background:
+        radial-gradient(circle at -10% -10%, rgba(148,163,184,0.35) 0, transparent 45%),
+        linear-gradient(135deg,#020617,#020617,#020617);
+    transform: rotateY(180deg);
+}
+
+/* HEADER / BRAND */
+.card-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    z-index:1;
+    position:relative;
+}
+
+.brand-mark {
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+}
+
+.brand-badge {
+    width:18px;
+    height:18px;
+    border-radius:6px;
+    background:radial-gradient(circle at 30% 20%,#f9fafb 0,#e5e7eb 40%,#9ca3af 100%);
+    box-shadow:0 0 0 1px rgba(148,163,184,0.6),
+               0 6px 14px rgba(15,23,42,0.9);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+    color:#020617;
+    font-weight:600;
+}
+
+.brand-text {
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.22em;
+    color:#e5e7eb;
+    opacity:0.9;
+}
+
+.brand-sub {
+    font-size:10px;
+    color:#9ca3af;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+}
+
+/* SCHEME DOTS (bottom right) */
+.scheme-mark {
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.scheme-dot {
+    width:28px;
+    height:28px;
+    border-radius:999px;
+    background:radial-gradient(circle at 30% 20%,#f9fafb 0,#e5e7eb 40%,#9ca3af 100%);
+    mix-blend-mode:screen;
+    opacity:0.9;
+}
+
+.scheme-dot.secondary {
+    opacity:0.55;
+}
+
+/* NUMBER */
+.card-number-wrapper {
+    margin-top:22px;
+    margin-bottom:12px;
+    position:relative;
+    z-index:1;
+}
+
+.card-number-label {
+    font-size:10px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:#9ca3af;
+    margin-bottom:6px;
+}
+
+.card-number {
+    font-size:20px;
+    letter-spacing:4px;
+    font-weight:500;
+}
+
+/* NAME + VALID */
+.card-footer-front {
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.16em;
+    color:#e5e7eb;
+    z-index:1;
+    position:relative;
+}
+
+.card-name-label,
+.valid-label {
+    font-size:9px;
+    color:#9ca3af;
+    margin-bottom:4px;
+}
+
+.card-name {
+    font-size:12px;
+    letter-spacing:0.18em;
+    opacity:0.95;
+}
+
+/* BACK – STRIP / SIGNATURE / CVV */
+.card-back-top {
+    margin-top:6px;
+}
+
+.strip {
+    background:linear-gradient(90deg,#020617,#020617,#111827);
+    height:44px;
+    border-radius:6px;
+    box-shadow:inset 0 0 10px rgba(0,0,0,0.7);
+}
+
+.card-back-middle {
+    margin-top:14px;
+}
+
+.signature-label {
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:0.16em;
+    color:#9ca3af;
+    margin-bottom:4px;
+}
+
+.signature-row {
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.signature {
+    flex:1;
+    background:repeating-linear-gradient(
+        -45deg,
+        #e5e7eb,
+        #e5e7eb 4px,
+        #d1d5db 4px,
+        #d1d5db 8px
+    );
+    height:34px;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    padding-right:10px;
+    color:#020617;
+    font-weight:600;
+    letter-spacing:3px;
+    border-radius:6px;
+    box-shadow:inset 0 0 6px rgba(15,23,42,0.4);
+}
+
+.cvv-box-label {
+    font-size:9px;
+    color:#9ca3af;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+}
+
+.cvv-text {
+    font-size:12px;
+    margin-top:4px;
+    text-align:right;
+    color:#e5e7eb;
+}
+
+/* CVV toggle link */
+.toggle-btn {
+    margin-top:8px;
+    font-size:10px;
+    cursor:pointer;
+    color:#38bdf8;
+    text-align:right;
+    text-transform:uppercase;
+    letter-spacing:0.16em;
+    position:relative;
+}
+
+.toggle-btn::after {
+    content:"";
+    position:absolute;
+    right:0;
+    bottom:-2px;
+    width:0;
+    height:2px;
+    border-radius:999px;
+    background:linear-gradient(90deg,#0ea5e9,#22c55e);
+    box-shadow:0 0 8px rgba(56,189,248,0.8);
+    transition:width 0.25s ease;
+}
+
+.toggle-btn:hover::after {
+    width:100%;
+}
+
+/* Disclaimer text */
+.card-back-bottom {
+    font-size:10px;
+    margin-top:10px;
+    color:#9ca3af;
+    line-height:1.4;
+    max-width:90%;
+}
+
+/* Glow around whole card */
+.card {
+    box-shadow:
+        0 28px 80px rgba(15,23,42,0.9),
+        0 0 70px rgba(56,189,248,0.22);
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="card-container">
+    <div class="card" onclick="flipCard()" id="card">
+
+        <!-- FRONT -->
+        <div class="card-front">
+            <div class="card-header">
+                <div class="brand-mark">
+                    <div class="brand-badge">
+                        <span></span>
+                    </div>
+                    <div class="brand-text">MyBank</div>
+                    <div class="brand-sub">Digital Card</div>
+                </div>
+
+                <div class="scheme-mark">
+                    <div class="scheme-dot"></div>
+                    <div class="scheme-dot secondary"></div>
+                </div>
+            </div>
+
+            <div class="card-number-wrapper">
+                <div class="card-number-label">Card Number</div>
+                <div class="card-number"
+                     th:text="${account.accountNumber}">
+                    1234 5678 9012 3456
+                </div>
+            </div>
+
+            <div class="card-footer-front">
+                <div>
+                    <div class="card-name-label">Cardholder</div>
+                    <div class="card-name"
+                         th:text="${account.user.name}">
+                        SHIVAM DWIVEDI
+                    </div>
+                </div>
+                <div>
+                    <div class="valid-label">Valid Thru</div>
+                    <div>12/29</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BACK -->
+        <div class="card-back">
+            <div class="card-back-top">
+                <div class="strip"></div>
+            </div>
+
+            <div class="card-back-middle">
+                <div class="signature-label">Authorized Signature / CVV</div>
+                <div class="signature-row">
+                    <div class="signature">
+                        <span id="cvvText">***</span>
+                    </div>
+                    <div>
+                        <div class="cvv-box-label">CVV</div>
+                    </div>
+                </div>
+                <div class="cvv-text">Tap “Show / Hide CVV” to reveal.</div>
+                <div class="toggle-btn" onclick="toggleCVV(event)">
+                    Show / Hide CVV
+                </div>
+            </div>
+
+            <div class="card-back-bottom">
+                This card is property of MyBank. If found, please contact support immediately. Unauthorized use is strictly prohibited.
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function flipCard() {
+    document.getElementById("card").classList.toggle("flip");
+}
+
+function toggleCVV(e) {
+    e.stopPropagation();
+    let cvv = document.getElementById("cvvText");
+    if (cvv.innerText === "***") {
+        cvv.innerText = "123"; // yahan backend/Thymeleaf se real CVV inject kar sakte ho
+    } else {
+        cvv.innerText = "***";
+    }
+}
+</script>
+
+</body>
+</html>

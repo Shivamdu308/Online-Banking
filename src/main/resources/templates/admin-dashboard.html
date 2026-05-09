@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>MyBank Admin Panel</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    margin:0;
+    font-family:'Segoe UI';
+    background: radial-gradient(circle at top,#020617,#000);
+    color:#e2e8f0;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width:240px;
+    height:100vh;
+    position:fixed;
+    background: rgba(2,6,23,0.95);
+    backdrop-filter: blur(20px);
+    padding:20px;
+    border-right:1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar h4 { color:#00c6ff; }
+
+.sidebar a {
+    display:block;
+    padding:12px;
+    color:#94a3b8;
+    border-radius:12px;
+    margin-bottom:10px;
+    text-decoration:none;
+}
+
+.sidebar a:hover {
+    background:linear-gradient(135deg,#00c6ff,#0072ff);
+    color:white;
+}
+
+/* MAIN */
+.main { margin-left:240px; padding:25px; }
+
+/* GLASS */
+.glass {
+    background: rgba(255,255,255,0.06);
+    border-radius:20px;
+    backdrop-filter: blur(25px);
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:0 20px 60px rgba(0,0,0,0.7);
+    padding:20px;
+}
+
+/* COLORS */
+.loan { color:#00c6ff; }
+.pending { color:#facc15; }
+.approved { color:#22c55e; }
+.rejected { color:#ef4444; }
+
+.table { color:white; }
+
+.btn-pro {
+    background: linear-gradient(135deg,#00c6ff,#0072ff);
+    border:none;
+    color:white;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h4>🏦 Admin</h4>
+    <a href="/admin/dashboard">🏠 Dashboard</a>
+    <a href="/admin/transactions">🧾 Transactions</a>
+
+    <a href="/admin/open-account" class="btn btn-success w-100 mb-2">
+        ➕ Open New Account
+    </a>
+
+    <a href="/admin/export">📥 Export Excel</a>
+    <a href="/admin/loans">🏦 Loan Requests</a>
+    <a href="/logout">🚪 Logout</a>
+</div>
+
+<div class="main">
+
+<h3>Admin Dashboard</h3>
+
+<!-- STATS -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="glass text-center">
+            <h6>Total Users</h6>
+            <h2 th:text="${totalUsers}"></h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass text-center">
+            <h6>Total Balance</h6>
+            <h2 th:text="'₹ ' + ${totalBalance}"></h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass text-center">
+            <h6>Total Loans</h6>
+            <h2 class="loan" th:text="${totalLoans}"></h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="glass text-center">
+            <h6>Pending Loans</h6>
+            <h2 class="pending" th:text="${pendingLoans}"></h2>
+        </div>
+    </div>
+</div>
+
+<!-- ALERTS -->
+<div class="glass mb-4">
+    <h5>🚨 Alerts</h5>
+    <ul>
+        <li th:each="a : ${alerts}" th:text="${a}"></li>
+    </ul>
+</div>
+
+<!-- LOAN ANALYTICS -->
+<div class="glass mb-4">
+    <h5>🏦 Loan Analytics</h5>
+
+    <div class="row text-center">
+        <div class="col-md-3">
+            <h6>Approved</h6>
+            <h4 class="approved" th:text="${approvedLoans}"></h4>
+        </div>
+        <div class="col-md-3">
+            <h6>Rejected</h6>
+            <h4 class="rejected" th:text="${rejectedLoans}"></h4>
+        </div>
+        <div class="col-md-3">
+            <h6>Total Amount</h6>
+            <h4 th:text="'₹ ' + ${totalLoanAmount}"></h4>
+        </div>
+        <div class="col-md-3">
+            <h6>EMI Active</h6>
+            <h4 class="loan" th:text="${activeLoans}"></h4>
+        </div>
+    </div>
+</div>
+
+<!-- EMI TRACKER -->
+<div class="glass mb-4">
+    <h5>📊 EMI Health</h5>
+
+    <div class="row text-center">
+        <div class="col-md-4">
+            <h6>Paid</h6>
+            <h4 style="color:#22c55e;" th:text="${paidEmi}"></h4>
+        </div>
+        <div class="col-md-4">
+            <h6>Pending</h6>
+            <h4 style="color:#facc15;" th:text="${pendingEmi}"></h4>
+        </div>
+        <div class="col-md-4">
+            <h6>Overdue</h6>
+            <h4 style="color:#ef4444;" th:text="${overdueEmi}"></h4>
+        </div>
+    </div>
+</div>
+
+<!-- BAR CHART -->
+<div class="glass mb-4">
+    <h5>📊 Transaction Distribution</h5>
+    <canvas id="barChart"></canvas>
+</div>
+
+<!-- RECENT TRANSACTIONS -->
+<div class="glass mb-4">
+    <h5>🧾 Recent Transactions</h5>
+    <table class="table">
+        <tr th:each="txn : ${recentTransactions}">
+            <td th:text="${txn.transactionId}"></td>
+            <td th:text="'₹ ' + ${txn.amount}"></td>
+            <td th:text="${txn.type}"></td>
+        </tr>
+    </table>
+</div>
+<!-- FEEDBACK SECTION -->
+<div class="glass mb-4">
+    <h5>🗣 User Feedback</h5>
+
+	<table class="table table-dark table-striped">
+	    <thead>
+	        <tr>
+	            <th>Name</th>
+	            <th>Email</th>
+	            <th>Rating</th>
+	            <th>Feature</th>
+	            <th>Message</th>
+	            <th>Action</th>
+	        </tr>
+	    </thead>
+
+	    <tbody>
+	        <tr th:each="f : ${feedbacks}">
+	            <td th:text="${f.name}"></td>
+	            <td th:text="${f.email}"></td>
+	            <td th:text="${f.rating}"></td>
+	            <td th:text="${f.feature}"></td>
+	            <td th:text="${f.message}"></td>
+
+	            <td>
+	                <a th:href="@{'/admin/feedback/delete/' + ${f.id}}"
+	                   class="btn btn-danger btn-sm"
+	                   onclick="return confirm('Delete this feedback?')">
+	                   Delete
+	                </a>
+	            </td>
+	        </tr>
+	    </tbody>
+	</table>
+</div>
+
+<!-- SEARCH -->
+<div class="glass mb-4">
+    <h5>🔍 Search Account</h5>
+    <form action="/admin/search-account" method="post">
+        <input type="text" name="accountNumber" class="form-control mb-2" required>
+        <button class="btn btn-pro">Search</button>
+    </form>
+</div>
+
+<!-- USERS -->
+<div class="glass">
+    <h5>User Management</h5>
+
+    <table class="table">
+        <tr th:each="acc : ${accounts}">
+            <td th:text="${acc.user.name}"></td>
+            <td th:text="${acc.accountNumber}"></td>
+            <td th:text="'₹ ' + ${acc.balance}"></td>
+        </tr>
+    </table>
+</div>
+
+</div>
+
+<!-- BAR CHART SCRIPT -->
+<script>
+const ctx = document.getElementById("barChart");
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ["Deposit","Withdraw","Transfer"],
+        datasets: [{
+            label: "Transactions",
+            data: [40, 25, 35], // yaha baad me backend se dynamic values pass kar sakte ho
+            backgroundColor: [
+                "rgba(34, 197, 94, 0.8)",   // Deposit
+                "rgba(239, 68, 68, 0.8)",   // Withdraw
+                "rgba(14, 165, 233, 0.8)"   // Transfer
+            ],
+            borderColor: [
+                "rgba(34, 197, 94, 1)",
+                "rgba(239, 68, 68, 1)",
+                "rgba(14, 165, 233, 1)"
+            ],
+            borderWidth: 1,
+            borderRadius: 6,
+            maxBarThickness: 60
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: "#e5e7eb"
+                }
+            },
+            title: {
+                display: false
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: "#9ca3af"
+                },
+                grid: {
+                    display: false
+                }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: "#9ca3af",
+                    precision:0
+                },
+                grid: {
+                    color: "rgba(148,163,184,0.25)"
+                }
+            }
+        }
+    }
+});
+</script>
+
+</body>
+</html>

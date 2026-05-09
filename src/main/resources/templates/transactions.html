@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Transaction History | MyBank</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+    background: linear-gradient(135deg,#020617,#020617,#000);
+    font-family: 'Segoe UI';
+    color: #e2e8f0;
+}
+
+/* HEADER */
+.header {
+    background: rgba(15,23,42,0.8);
+    padding: 20px;
+    border-radius: 18px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(148,163,184,0.15);
+}
+
+/* GLASS CARD */
+.glass {
+    background: rgba(15, 23, 42, 0.8);
+    padding: 20px;
+    border-radius: 18px;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(148,163,184,0.15);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+
+/* INPUT */
+.form-control, select {
+    border-radius: 30px;
+    background: rgba(2,6,23,0.9);
+    border: 1px solid rgba(148,163,184,0.3);
+    color: white;
+}
+
+.form-control:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 10px #38bdf8;
+}
+
+/* BUTTON */
+.btn-pro {
+    background: linear-gradient(135deg,#00c6ff,#0072ff);
+    border: none;
+    border-radius: 30px;
+    color: white;
+    padding: 8px 15px;
+}
+
+.btn-pro:hover {
+    box-shadow: 0 0 15px #00c6ff;
+}
+
+/* TABLE */
+.table {
+    color:#e2e8f0;
+}
+
+.table thead {
+    opacity: 0.7;
+}
+
+.table tbody tr {
+    transition: 0.2s;
+}
+
+.table tbody tr:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+/* CREDIT / DEBIT */
+.credit {
+    color: #22c55e;
+    font-weight: bold;
+}
+.debit {
+    color: #ef4444;
+    font-weight: bold;
+}
+
+/* SEARCH BOX */
+.search-box {
+    margin-bottom: 15px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container mt-4">
+
+<!-- HEADER -->
+<div class="header d-flex justify-content-between align-items-center">
+
+    <div>
+        <h4 style="color:#00c6ff;">📄 Transaction History</h4>
+        <small>View and manage all your transactions</small>
+    </div>
+
+    <div>
+        <button onclick="window.print()" class="btn btn-pro">🖨 Print</button>
+        <a th:href="@{/dashboard}" class="btn btn-outline-light ms-2">← Back</a>
+    </div>
+
+</div>
+
+<!-- FILTER -->
+<div class="glass mb-3">
+
+    <div class="row search-box">
+
+        <div class="col-md-4">
+            <input type="text" id="search" class="form-control" placeholder="🔍 Search transaction...">
+        </div>
+
+        <div class="col-md-4">
+            <select id="typeFilter" class="form-control">
+                <option value="">All</option>
+                <option value="CREDIT">Credit</option>
+                <option value="DEBIT">Debit</option>
+                <option value="TRANSFER">Transfer</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <input type="date" id="dateFilter" class="form-control">
+        </div>
+
+    </div>
+
+</div>
+
+<!-- TABLE -->
+<div class="glass">
+
+    <table class="table table-borderless" id="txnTable">
+
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Mode</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr th:each="txn : ${transactions}">
+                <td th:text="${#temporals.format(txn.timestamp,'dd-MM-yyyy HH:mm')}"></td>
+                <td th:text="${txn.description}"></td>
+                <td th:text="${txn.type}"></td>
+
+                <td th:text="'₹ ' + txn.amount"
+                    th:classappend="${txn.type=='CREDIT'} ? 'credit' : 'debit'">
+                </td>
+
+                <td>
+                    <span th:text="${txn.type=='TRANSFER'} ? 'Online' : 'Cash'"></span>
+                </td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(transactions)}">
+                <td colspan="5" class="text-center">No Transactions Found</td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</div>
+
+<!-- JS FILTER -->
+<script>
+const searchInput = document.getElementById("search");
+const typeFilter = document.getElementById("typeFilter");
+
+searchInput.addEventListener("keyup", filterTable);
+typeFilter.addEventListener("change", filterTable);
+
+function filterTable() {
+
+    let search = searchInput.value.toLowerCase();
+    let type = typeFilter.value;
+
+    let rows = document.querySelectorAll("#txnTable tbody tr");
+
+    rows.forEach(row => {
+
+        let text = row.innerText.toLowerCase();
+        let typeText = row.children[2].innerText;
+
+        let matchSearch = text.includes(search);
+        let matchType = type === "" || typeText === type;
+
+        row.style.display = (matchSearch && matchType) ? "" : "none";
+    });
+}
+</script>
+
+</body>
+</html>

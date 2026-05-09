@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Admin Loan Panel | MyBank</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+    background: radial-gradient(circle at top,#020617,#000);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI";
+    color: #e2e8f0;
+}
+
+/* HEADER */
+.header {
+    background: rgba(15,23,42,0.85);
+    padding: 22px;
+    border-radius: 20px;
+    margin-bottom: 25px;
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(148,163,184,0.15);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+}
+
+/* GLASS CARD */
+.glass {
+    background: rgba(15,23,42,0.85);
+    padding: 20px;
+    border-radius: 20px;
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(148,163,184,0.15);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+}
+
+/* SEARCH BAR */
+.search-box {
+    background: rgba(255,255,255,0.05);
+    border-radius: 15px;
+    padding: 10px 15px;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: white;
+}
+
+/* TABLE */
+.table { color: #e2e8f0; }
+.table thead { opacity: 0.7; }
+
+.table tbody tr {
+    transition: 0.3s;
+}
+.table tbody tr:hover {
+    background: rgba(255,255,255,0.05);
+    transform: scale(1.01);
+}
+
+/* STATUS BADGE */
+.badge-status {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.pending { background:#facc15; color:black; }
+.approved { background:#22c55e; color:white; }
+.rejected { background:#ef4444; color:white; }
+
+/* BUTTON */
+.btn-approve {
+    background: linear-gradient(135deg,#22c55e,#16a34a);
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    color: white;
+    font-size: 12px;
+}
+
+.btn-reject {
+    background: linear-gradient(135deg,#ef4444,#dc2626);
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    color: white;
+    font-size: 12px;
+}
+
+.btn-approve:hover { box-shadow: 0 0 10px #22c55e; }
+.btn-reject:hover { box-shadow: 0 0 10px #ef4444; }
+
+/* SUMMARY CARDS */
+.summary {
+    background: rgba(255,255,255,0.05);
+    border-radius: 15px;
+    padding: 15px;
+    text-align: center;
+}
+
+/* EMPTY */
+.empty {
+    opacity: 0.6;
+    padding: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container mt-4">
+
+<!-- HEADER -->
+<div class="header d-flex justify-content-between align-items-center">
+
+    <div>
+        <h4 style="color:#00c6ff;">🏦 Loan Requests</h4>
+        <small>Manage all user loan applications</small>
+    </div>
+
+    <div>
+        <a th:href="@{/admin/dashboard}" class="btn btn-outline-light">← Back</a>
+    </div>
+
+</div>
+
+<!-- SUMMARY -->
+<div class="row mb-4 text-center">
+
+    <div class="col-md-4">
+        <div class="summary">
+            <h6>Total Requests</h6>
+            <h4 th:text="${loans != null ? loans.size() : 0}"></h4>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="summary">
+            <h6>Approved</h6>
+            <h4 style="color:#22c55e;"
+                th:text="${#lists.size(loans.?[status.name()=='APPROVED'])}">
+            </h4>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="summary">
+            <h6>Pending</h6>
+            <h4 style="color:#facc15;"
+                th:text="${#lists.size(loans.?[status.name()=='PENDING'])}">
+            </h4>
+        </div>
+    </div>
+
+</div>
+
+<!-- SEARCH -->
+<input type="text" id="searchBox" class="form-control search-box mb-3"
+       placeholder="🔍 Search loan by user/email/type...">
+
+<!-- TABLE -->
+<div class="glass">
+
+<table class="table table-borderless align-middle">
+
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Amount</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Applied On</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody id="loanTable">
+
+        <tr th:each="loan : ${loans}">
+
+            <td th:text="${loan.user != null ? loan.user.name : 'N/A'}"></td>
+
+            <td th:text="${loan.user != null ? loan.user.email : 'N/A'}"></td>
+
+            <td th:text="'₹ ' + (${loan.amount != null ? loan.amount : 0})"></td>
+
+            <td th:text="${loan.type != null ? loan.type : '-'}"></td>
+
+            <td>
+                <span class="badge-status"
+                      th:text="${loan.status != null ? loan.status : 'UNKNOWN'}"
+                      th:classappend="
+                      ${loan.status != null && loan.status.name()=='PENDING'} ? ' pending' :
+                      (${loan.status != null && loan.status.name()=='APPROVED'} ? ' approved' : ' rejected')">
+                </span>
+            </td>
+
+            <td th:text="${loan.appliedAt != null ? #temporals.format(loan.appliedAt,'dd-MM-yyyy') : '-'}"></td>
+
+            <td>
+
+                <div th:if="${loan.status != null and loan.status.name()=='PENDING'}">
+
+                    <a th:href="@{'/admin/loan/approve/' + ${loan.id}}"
+                       class="btn btn-approve btn-sm">✔</a>
+
+                    <a th:href="@{'/admin/loan/reject/' + ${loan.id}}"
+                       class="btn btn-reject btn-sm">✖</a>
+
+                </div>
+
+                <span th:if="${loan.status != null and loan.status.name()!='PENDING'}">
+                    ✔ Done
+                </span>
+
+            </td>
+
+        </tr>
+
+        <tr th:if="${loans == null or #lists.isEmpty(loans)}">
+            <td colspan="7" class="text-center empty">
+                🚫 No Loan Requests Found
+            </td>
+        </tr>
+
+    </tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<!-- SEARCH SCRIPT -->
+<script>
+document.getElementById("searchBox").addEventListener("keyup", function() {
+    let val = this.value.toLowerCase();
+    document.querySelectorAll("#loanTable tr").forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(val) ? "" : "none";
+    });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>Transfer Money | MyBank</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+body {
+    margin: 0;
+    height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+
+    background: linear-gradient(rgba(2,6,23,0.85), rgba(2,6,23,0.95)),
+                url('/images/bank-bg.jpg');
+
+    background-size: cover;
+    background-position: center;
+}
+
+/* CENTER */
+.container-box {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* GLASS CARD */
+.transfer-card {
+    width: 420px;
+    padding: 32px;
+    border-radius: 25px;
+
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(40px);
+
+    border: 1px solid rgba(56, 189, 248, 0.3);
+
+    box-shadow:
+        0 25px 80px rgba(0,0,0,0.9),
+        inset 0 0 20px rgba(255,255,255,0.05);
+
+    color: white;
+    transition: 0.3s;
+}
+
+.transfer-card:hover {
+    transform: translateY(-5px);
+}
+
+/* TITLE */
+.title {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.title h3 {
+    background: linear-gradient(135deg,#00c6ff,#22d3ee);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+/* TOGGLE */
+.method-toggle {
+    display: flex;
+    gap: 6px;
+    padding: 5px;
+    border-radius: 999px;
+    background: rgba(15,23,42,0.9);
+    border: 1px solid rgba(148,163,184,0.35);
+    margin-bottom: 20px;
+}
+
+.method-option {
+    flex: 1;
+    border-radius: 999px;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    color: #cbd5f5;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.method-option.active {
+    background: linear-gradient(135deg,#38bdf8,#0ea5e9);
+    color: black;
+}
+
+/* INPUT */
+.form-control {
+    border-radius: 50px;
+    background: rgba(2,6,23,0.7);
+    border: 1px solid rgba(148,163,184,0.3);
+    color: white;
+    padding: 12px 18px;
+}
+
+.form-control:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 15px rgba(56,189,248,0.9);
+}
+
+/* LABEL */
+.field-label {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-bottom: 4px;
+}
+
+/* BUTTON */
+.btn-transfer {
+    width: 100%;
+    border-radius: 50px;
+    background: linear-gradient(135deg,#0ea5e9,#22c55e);
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    transition: 0.3s;
+}
+
+.btn-transfer:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 25px rgba(34,197,94,0.8);
+}
+
+/* BACK */
+.back-link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.back-link a {
+    color: #38bdf8;
+    text-decoration: none;
+}
+
+/* SECTIONS */
+.method-section { display: none; }
+.method-section.active { display: block; }
+
+</style>
+</head>
+
+<body>
+
+<div class="container-box">
+
+<div class="transfer-card">
+
+    <div class="title">
+        <h3>💸 Transfer Money</h3>
+        <small>Fast • Secure • Instant</small>
+    </div>
+
+    <div class="method-toggle">
+        <button type="button" class="method-option active" id="bankTab">Bank</button>
+        <button type="button" class="method-option" id="upiTab">UPI</button>
+    </div>
+
+    <form th:action="@{/transfer}" method="post">
+
+        <input type="hidden" name="paymentType" id="paymentType" value="BANK"/>
+
+        <!-- BANK -->
+        <div id="bankSection" class="method-section active">
+            <div class="field-label">Receiver Account</div>
+            <input type="text" name="toAccount" class="form-control mb-3">
+        </div>
+
+        <!-- UPI -->
+        <div id="upiSection" class="method-section">
+            <div class="field-label">UPI ID</div>
+            <input type="text" name="upiId" class="form-control mb-3">
+
+            <div class="field-label">Note</div>
+            <input type="text" name="upiNote" class="form-control mb-3">
+        </div>
+
+        <!-- AMOUNT -->
+        <div class="field-label">Amount</div>
+        <div style="position:relative;">
+            <span style="position:absolute;left:15px;top:10px;color:#6b7280;">₹</span>
+            <input type="number" name="amount" class="form-control mb-3" style="padding-left:30px;" required>
+        </div>
+
+        <button class="btn btn-transfer">Transfer →</button>
+
+    </form>
+
+    <div class="back-link">
+        <a th:href="@{/dashboard}">← Dashboard</a>
+    </div>
+
+</div>
+
+</div>
+
+<script>
+const bankTab = document.getElementById("bankTab");
+const upiTab = document.getElementById("upiTab");
+const bankSection = document.getElementById("bankSection");
+const upiSection = document.getElementById("upiSection");
+const paymentType = document.getElementById("paymentType");
+
+bankTab.onclick = () => {
+    bankTab.classList.add("active");
+    upiTab.classList.remove("active");
+
+    bankSection.classList.add("active");
+    upiSection.classList.remove("active");
+
+    paymentType.value = "BANK";
+
+    // ✅ FIX
+    document.querySelector('[name="toAccount"]').required = true;
+    document.querySelector('[name="upiId"]').required = false;
+};
+
+upiTab.onclick = () => {
+    upiTab.classList.add("active");
+    bankTab.classList.remove("active");
+
+    upiSection.classList.add("active");
+    bankSection.classList.remove("active");
+
+    paymentType.value = "UPI";
+
+    // ✅ FIX
+    document.querySelector('[name="upiId"]').required = true;
+    document.querySelector('[name="toAccount"]').required = false;
+};
+</script>
+
+</body>
+</html>

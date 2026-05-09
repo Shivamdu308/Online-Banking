@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>MyBank Secure Login</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+           
+			background-size: cover;
+			background-position: center;
+			background-repeat: no-repeat;
+
+            background: url('https://images.unsplash.com/photo-1651130538140-0771ae0037e2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3Dhttps://images.unsplash.com/photo-1601597111158-2fceff292cdc') no-repeat center/cover;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+          
+        }
+
+        .container-box {
+            position: relative;
+            z-index: 2;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 🔥 PREMIUM CARD */
+        .login-card {
+            width: 400px;
+            padding: 35px;
+            border-radius: 24px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.9);
+            color: white;
+            transition: 0.3s;
+        }
+
+        .login-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 40px 100px rgba(0,0,0,1);
+        }
+
+        /* 🔥 BRAND */
+        .brand {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .brand h2 {
+            font-weight: 600;
+            background: linear-gradient(135deg,#00c6ff,#0072ff);
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .brand small {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        /* ROLE SWITCH */
+        .role {
+            display: flex;
+            background: rgba(2,6,23,0.8);
+            border-radius: 50px;
+            padding: 5px;
+            margin-bottom: 18px;
+            border: 1px solid rgba(148,163,184,0.2);
+        }
+
+        .role input { display:none; }
+
+        .role label {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .role input:checked + label {
+            background: linear-gradient(135deg,#00c6ff,#0072ff);
+            box-shadow: 0 0 10px #38bdf8;
+        }
+
+        /* INPUT */
+        .form-control {
+            border-radius: 50px;
+            background: rgba(2,6,23,0.9);
+            border: 1px solid rgba(148,163,184,0.3);
+            color: white;
+            padding: 10px 15px;
+        }
+
+        .form-control:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 12px #38bdf8;
+        }
+
+        /* BUTTON */
+        .btn-login {
+            width: 100%;
+            border-radius: 50px;
+            background: linear-gradient(135deg,#00c6ff,#0072ff);
+            border: none;
+            padding: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-login:hover {
+            box-shadow: 0 0 25px #38bdf8;
+            transform: translateY(-1px);
+        }
+
+        /* LINKS */
+        .forgot {
+            text-align: right;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .forgot a {
+            color: #38bdf8;
+            text-decoration: none;
+        }
+
+        .signup-link {
+            text-align: center;
+            font-size: 13px;
+            margin-top: 18px;
+        }
+
+        .signup-link a {
+            color: #00c6ff;
+            text-decoration: none;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            text-align: center;
+            color: #f87171;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        @media(max-width:768px){
+            .login-card { width: 90%; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="overlay"></div>
+
+<div class="container-box">
+    <div class="login-card">
+
+        <!-- 🔥 BRAND -->
+        <div class="brand">
+
+            <h2>MyBank</h2>
+            <small>Secure Digital Banking</small>
+        </div>
+
+        <p th:if="${error}" th:text="${error}" class="error"></p>
+
+        <form th:action="@{/login}" method="post">
+
+            <!-- ROLE -->
+            <div class="role">
+                <input type="radio" id="user" name="role" value="USER" checked onclick="toggleFields()">
+                <label for="user">User</label>
+
+                <input type="radio" id="admin" name="role" value="ADMIN" onclick="toggleFields()">
+                <label for="admin">Admin</label>
+            </div>
+
+            <!-- USER -->
+            <div id="userFields">
+                <input type="text" name="accountNumber"
+                       class="form-control mb-3" placeholder="Account Number">
+
+                <input type="password" name="pin"
+                       class="form-control" placeholder="Enter PIN">
+
+                <div class="forgot">
+                    <a th:href="@{/forgot-pin}">Forgot PIN?</a>
+                </div>
+            </div>
+
+            <!-- ADMIN -->
+            <div id="adminFields" style="display:none;">
+                <input type="text" name="adminId"
+                       class="form-control mb-3" placeholder="Admin ID">
+
+                <input type="password" name="adminPassword"
+                       class="form-control" placeholder="Password">
+            </div>
+
+            <button class="btn btn-login mt-3">Login</button>
+
+        </form>
+
+        <div class="signup-link">
+            Don’t have an account?
+            <a th:href="@{/signup}">Create Account</a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function toggleFields() {
+    let isUser = document.getElementById("user").checked;
+
+    document.getElementById("userFields").style.display = isUser ? "block" : "none";
+    document.getElementById("adminFields").style.display = isUser ? "none" : "block";
+}
+</script>
+
+</body>
+</html>
